@@ -45,13 +45,15 @@ st.markdown(
     """
 )
 
-# Sidebar with navigation
-st.sidebar.title("Navigation")
-selected_page = st.sidebar.radio("Go to:", ["Visualization", "Explain"])
+# Tabs for navigation
+tab1, tab2 = st.tabs(["Visualization", "Explain"])
 
-if selected_page == "Visualization":
-    # Sidebar for inputs
+# Visualization Tab
+with tab1:
+    st.header("Visualization")
     st.sidebar.header("🎨 Visualization Settings")
+    
+    # Sidebar controls for visualization
     with st.sidebar.expander("Adjust Parameters"):
         width = st.slider("Width (pixels)", 400, 1200, 800, step=100)
         height = st.slider("Height (pixels)", 400, 1200, 800, step=100)
@@ -65,13 +67,14 @@ if selected_page == "Visualization":
     # Generate and display Mandelbrot set
     st.write("### Mandelbrot Set Output")
     st.write("Use the controls in the sidebar to customize the visualization.")
-    st.spinner("Generating Mandelbrot set...")
-    mask = mandelbrot_set(width, height, max_iter, x_min, x_max, y_min, y_max)
-    fig = plot_mandelbrot(mask, cmap=cmap)
-    st.pyplot(fig)
+    with st.spinner("Generating Mandelbrot set..."):
+        mask = mandelbrot_set(width, height, max_iter, x_min, x_max, y_min, y_max)
+        fig = plot_mandelbrot(mask, cmap=cmap)
+        st.pyplot(fig)
 
-elif selected_page == "Explain":
-    # Display the explanation
+# Explain Tab
+with tab2:
+    st.header("Explain")
     st.write(mandelbrot_explanation())
 
 # Footer
