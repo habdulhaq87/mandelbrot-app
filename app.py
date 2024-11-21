@@ -10,8 +10,9 @@ def mandelbrot_3d(x_min, x_max, y_min, y_max, z_min, z_max, res, max_iter):
     z = np.linspace(z_min, z_max, res)
     X, Y, Z = np.meshgrid(x, y, z)
     
-    C = X + 1j * (Y + 1j * Z)
-    Z = np.zeros(C.shape, dtype=complex)
+    # Flatten the arrays for vectorized operations
+    C = X.flatten() + 1j * (Y.flatten() + 1j * Z.flatten())
+    Z = np.zeros_like(C, dtype=complex)
     iterations = np.zeros(C.shape, dtype=int)
     
     for i in range(max_iter):
@@ -19,8 +20,9 @@ def mandelbrot_3d(x_min, x_max, y_min, y_max, z_min, z_max, res, max_iter):
         Z[mask] = Z[mask]**2 + C[mask]
         iterations[mask] += 1
 
-    # Normalize the iterations to 0-1 for better visualization
-    iterations = iterations / max_iter
+    # Reshape iterations back to 3D and normalize
+    iterations = iterations.reshape((res, res, res))
+    iterations = iterations / max_iter  # Normalize for better visualization
     return X, Y, Z, iterations
 
 # Streamlit interface
