@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 
+@st.cache
 def mandelbrot_3d(x_min, x_max, y_min, y_max, z_min, z_max, res, max_iter):
     """Generate the Mandelbrot set in 3D."""
     x = np.linspace(x_min, x_max, res)
@@ -18,41 +19,41 @@ def mandelbrot_3d(x_min, x_max, y_min, y_max, z_min, z_max, res, max_iter):
         Z[mask] = Z[mask]**2 + C[mask]
         iterations[mask] += 1
 
-    return iterations
+    # Normalize the iterations to 0-1 for better visualization
+    iterations = iterations / max_iter
+    return X, Y, Z, iterations
 
 # Streamlit interface
-st.title("3D Mandelbrot Set Visualization")
+st.title("Optimized 3D Mandelbrot Set Visualization")
 
 # Sidebar controls
 st.sidebar.header("3D Visualization Settings")
 x_min, x_max = st.sidebar.slider("X-axis Range", -2.0, 2.0, (-1.5, 1.5))
 y_min, y_max = st.sidebar.slider("Y-axis Range", -2.0, 2.0, (-1.5, 1.5))
 z_min, z_max = st.sidebar.slider("Z-axis Range", -2.0, 2.0, (-1.0, 1.0))
-res = st.sidebar.slider("Resolution", 20, 200, 50)
+res = st.sidebar.slider("Resolution", 10, 100, 50)
 max_iter = st.sidebar.slider("Max Iterations", 10, 200, 50)
 
-st.sidebar.text("Generating...")
-# Generate the 3D Mandelbrot set
-iterations = mandelbrot_3d(x_min, x_max, y_min, y_max, z_min, z_max, res, max_iter)
+st.sidebar.text("Generating Mandelbrot set...")
+# Generate the Mandelbrot set
+X, Y, Z, iterations = mandelbrot_3d(x_min, x_max, y_min, y_max, z_min, z_max, res, max_iter)
 
-# Create a Plotly figure
+# Create a 3D volume rendering
 fig = go.Figure(
-    data=[
-        go.Volume(
-            x=np.repeat(np.linspace(x_min, x_max, res), res * res),
-            y=np.tile(np.repeat(np.linspace(y_min, y_max, res), res), res),
-            z=np.tile(np.linspace(z_min, z_max, res), res * res),
-            value=iterations.flatten(),
-            isomin=0,
-            isomax=max_iter,
-            opacity=0.1,  # Adjust for better visualization
-            surface_count=20,
-            colorscale="Viridis",
-        )
-    ]
+    data=go.Volume(
+        x=X.flatten(),
+        y=Y.flatten(),
+        z=Z.flatten(),
+        value=iterations.flatten(),
+        isomin=0.0,
+        isomax=1.0,
+        opacity=0.2,  # Adjust for better visualization
+        surface_count=20,
+        colorscale="Viridis",
+    )
 )
 
-# Customize the layout
+# Update layout
 fig.update_layout(
     scene=dict(
         xaxis_title="Re",
