@@ -11,10 +11,13 @@ def mandelbrot_set(width, height, max_iter, x_min, x_max, y_min, y_max):
     mask = np.zeros(C.shape, dtype=int)
     
     for i in range(max_iter):
-        Z = Z**2 + C
-        mask += (np.abs(Z) < 2)
+        # Update only points that have not diverged
+        not_diverged = np.abs(Z) <= 2
+        Z[not_diverged] = Z[not_diverged]**2 + C[not_diverged]
+        mask[not_diverged] += 1
         
     return mask
+
 
 def plot_mandelbrot(mask, cmap='hot'):
     """Plot the Mandelbrot set."""
