@@ -2,16 +2,17 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 
-@st.cache
+@st.cache_data
 def mandelbrot_3d(x_min, x_max, y_min, y_max, z_min, z_max, res, max_iter):
     """Generate the Mandelbrot set in 3D."""
+    # Generate 3D grid
     x = np.linspace(x_min, x_max, res)
     y = np.linspace(y_min, y_max, res)
     z = np.linspace(z_min, z_max, res)
     X, Y, Z = np.meshgrid(x, y, z)
     
-    # Flatten the arrays for vectorized operations
-    C = X.flatten() + 1j * (Y.flatten() + 1j * Z.flatten())
+    # Flatten grid for vectorized operations
+    C = X.flatten() + 1j * (Y.flatten() + Z.flatten() * 1j)
     Z = np.zeros_like(C, dtype=complex)
     iterations = np.zeros(C.shape, dtype=int)
     
@@ -20,7 +21,7 @@ def mandelbrot_3d(x_min, x_max, y_min, y_max, z_min, z_max, res, max_iter):
         Z[mask] = Z[mask]**2 + C[mask]
         iterations[mask] += 1
 
-    # Reshape iterations back to 3D and normalize
+    # Reshape iterations to 3D and normalize
     iterations = iterations.reshape((res, res, res))
     iterations = iterations / max_iter  # Normalize for better visualization
     return X, Y, Z, iterations
@@ -40,16 +41,22 @@ st.sidebar.text("Generating Mandelbrot set...")
 # Generate the Mandelbrot set
 X, Y, Z, iterations = mandelbrot_3d(x_min, x_max, y_min, y_max, z_min, z_max, res, max_iter)
 
+# Flatten grid data for visualization
+X_flat = X.flatten()
+Y_flat = Y.flatten()
+Z_flat = Z.flatten()
+iterations_flat = iterations.flatten()
+
 # Create a 3D volume rendering
 fig = go.Figure(
     data=go.Volume(
-        x=X.flatten(),
-        y=Y.flatten(),
-        z=Z.flatten(),
-        value=iterations.flatten(),
+        x=X_flat,
+        y=Y_flat,
+        z=Z_flat,
+        value=iterations_flat,
         isomin=0.0,
         isomax=1.0,
-        opacity=0.2,  # Adjust for better visualization
+        opacity=0.1,  # Adjust for better visualization
         surface_count=20,
         colorscale="Viridis",
     )
