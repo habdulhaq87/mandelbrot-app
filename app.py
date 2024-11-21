@@ -1,6 +1,7 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
+from explains import mandelbrot_explanation
 
 def mandelbrot_set(width, height, max_iter, x_min, x_max, y_min, y_max):
     """Generate the Mandelbrot set image."""
@@ -44,25 +45,34 @@ st.markdown(
     """
 )
 
-# Sidebar for inputs
-st.sidebar.header("🎨 Visualization Settings")
-with st.sidebar.expander("Adjust Parameters"):
-    width = st.slider("Width (pixels)", 400, 1200, 800, step=100)
-    height = st.slider("Height (pixels)", 400, 1200, 800, step=100)
-    max_iter = st.slider("Max Iterations", 50, 1000, 200, step=50)
-    cmap = st.selectbox("Color Map", ["hot", "plasma", "viridis", "magma", "cividis"])
+# Sidebar with navigation
+st.sidebar.title("Navigation")
+selected_page = st.sidebar.radio("Go to:", ["Visualization", "Explain"])
 
-with st.sidebar.expander("Adjust Axis Ranges"):
-    x_min, x_max = st.slider("X-axis Range", -3.0, 3.0, (-2.0, 1.0))
-    y_min, y_max = st.slider("Y-axis Range", -3.0, 3.0, (-1.5, 1.5))
+if selected_page == "Visualization":
+    # Sidebar for inputs
+    st.sidebar.header("🎨 Visualization Settings")
+    with st.sidebar.expander("Adjust Parameters"):
+        width = st.slider("Width (pixels)", 400, 1200, 800, step=100)
+        height = st.slider("Height (pixels)", 400, 1200, 800, step=100)
+        max_iter = st.slider("Max Iterations", 50, 1000, 200, step=50)
+        cmap = st.selectbox("Color Map", ["hot", "plasma", "viridis", "magma", "cividis"])
 
-# Generate and display Mandelbrot set
-st.write("### Mandelbrot Set Output")
-st.write("Use the controls in the sidebar to customize the visualization.")
-st.spinner("Generating Mandelbrot set...")
-mask = mandelbrot_set(width, height, max_iter, x_min, x_max, y_min, y_max)
-fig = plot_mandelbrot(mask, cmap=cmap)
-st.pyplot(fig)
+    with st.sidebar.expander("Adjust Axis Ranges"):
+        x_min, x_max = st.slider("X-axis Range", -3.0, 3.0, (-2.0, 1.0))
+        y_min, y_max = st.slider("Y-axis Range", -3.0, 3.0, (-1.5, 1.5))
+
+    # Generate and display Mandelbrot set
+    st.write("### Mandelbrot Set Output")
+    st.write("Use the controls in the sidebar to customize the visualization.")
+    st.spinner("Generating Mandelbrot set...")
+    mask = mandelbrot_set(width, height, max_iter, x_min, x_max, y_min, y_max)
+    fig = plot_mandelbrot(mask, cmap=cmap)
+    st.pyplot(fig)
+
+elif selected_page == "Explain":
+    # Display the explanation
+    st.write(mandelbrot_explanation())
 
 # Footer
 st.markdown("---")
