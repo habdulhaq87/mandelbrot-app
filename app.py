@@ -1,77 +1,67 @@
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+import plotly.graph_objects as go
 
-def mandelbrot_set_3d(width, height, max_iter, x_min, x_max, y_min, y_max):
-    """Generate the Mandelbrot set data for a 3D plot."""
-    x, y = np.linspace(x_min, x_max, width), np.linspace(y_min, y_max, height)
-    X, Y = np.meshgrid(x, y)
-    C = X + 1j * Y
-    Z = np.zeros_like(C, dtype=complex)
-    mask = np.zeros(C.shape, dtype=int)
+def mandelbrot_3d(x_min, x_max, y_min, y_max, z_min, z_max, res, max_iter):
+    """Generate the Mandelbrot set in 3D."""
+    x = np.linspace(x_min, x_max, res)
+    y = np.linspace(y_min, y_max, res)
+    z = np.linspace(z_min, z_max, res)
+    X, Y, Z = np.meshgrid(x, y, z)
+    
+    C = X + 1j * (Y + 1j * Z)
+    Z = np.zeros(C.shape, dtype=complex)
+    iterations = np.zeros(C.shape, dtype=int)
     
     for i in range(max_iter):
-        not_diverged = np.abs(Z) <= 2
-        Z[not_diverged] = Z[not_diverged]**2 + C[not_diverged]
-        mask[not_diverged] += 1
-    
-    return X, Y, mask
+        mask = np.abs(Z) < 2
+        Z[mask] = Z[mask]**2 + C[mask]
+        iterations[mask] += 1
 
-def plot_mandelbrot_3d(X, Y, Z, cmap='plasma'):
-    """Plot the Mandelbrot set in 3D."""
-    fig = plt.figure(figsize=(10, 7))
-    ax = fig.add_subplot(111, projection='3d')
-    ax.plot_surface(X, Y, Z, cmap=cmap, edgecolor='none')
-    ax.set_title("3D Mandelbrot Set", fontsize=16)
-    ax.set_xlabel("Real Axis", fontsize=12)
-    ax.set_ylabel("Imaginary Axis", fontsize=12)
-    ax.set_zlabel("Iterations", fontsize=12)
-    ax.view_init(elev=30, azim=135)  # Adjust viewing angle
-    return fig
+    return iterations
 
-# Streamlit page configuration
-st.set_page_config(
-    page_title="3D Mandelbrot Set Visualization",
-    page_icon="🌌",
-    layout="wide",
-    initial_sidebar_state="expanded",
+# Streamlit interface
+st.title("3D Mandelbrot Set Visualization")
+
+# Sidebar controls
+st.sidebar.header("3D Visualization Settings")
+x_min, x_max = st.sidebar.slider("X-axis Range", -2.0, 2.0, (-1.5, 1.5))
+y_min, y_max = st.sidebar.slider("Y-axis Range", -2.0, 2.0, (-1.5, 1.5))
+z_min, z_max = st.sidebar.slider("Z-axis Range", -2.0, 2.0, (-1.0, 1.0))
+res = st.sidebar.slider("Resolution", 20, 200, 50)
+max_iter = st.sidebar.slider("Max Iterations", 10, 200, 50)
+
+st.sidebar.text("Generating...")
+# Generate the 3D Mandelbrot set
+iterations = mandelbrot_3d(x_min, x_max, y_min, y_max, z_min, z_max, res, max_iter)
+
+# Create a Plotly figure
+fig = go.Figure(
+    data=[
+        go.Volume(
+            x=np.repeat(np.linspace(x_min, x_max, res), res * res),
+            y=np.tile(np.repeat(np.linspace(y_min, y_max, res), res), res),
+            z=np.tile(np.linspace(z_min, z_max, res), res * res),
+            value=iterations.flatten(),
+            isomin=0,
+            isomax=max_iter,
+            opacity=0.1,  # Adjust for better visualization
+            surface_count=20,
+            colorscale="Viridis",
+        )
+    ]
 )
 
-# Main page title and description
-st.title("🌌 3D Mandelbrot Set Visualization")
-st.markdown(
-    """
-    Explore the Mandelbrot set in 3D! The height of the plot represents the number of iterations 
-    before divergence for each point in the complex plane. Adjust the settings in the sidebar to customize the view.
-    """
+# Customize the layout
+fig.update_layout(
+    scene=dict(
+        xaxis_title="Re",
+        yaxis_title="Im",
+        zaxis_title="3rd Dimension",
+    ),
+    title="Interactive 3D Mandelbrot Set",
+    margin=dict(l=0, r=0, b=0, t=40),
 )
 
-# Sidebar for input parameters
-st.sidebar.header("🎛 Visualization Settings")
-with st.sidebar.expander("Adjust Parameters"):
-    width = st.slider("Width (pixels)", 100, 1000, 500, step=50)
-    height = st.slider("Height (pixels)", 100, 1000, 500, step=50)
-    max_iter = st.slider("Max Iterations", 10, 500, 100, step=10)
-    cmap = st.selectbox("Color Map", ["viridis", "plasma", "magma", "cividis", "hot"])
-
-with st.sidebar.expander("Adjust Axis Ranges"):
-    x_min, x_max = st.slider("X-axis Range", -3.0, 3.0, (-2.0, 1.0))
-    y_min, y_max = st.slider("Y-axis Range", -3.0, 3.0, (-1.5, 1.5))
-
-# Generate and display Mandelbrot set
-st.write("### Mandelbrot Set in 3D")
-st.spinner("Generating Mandelbrot set...")
-X, Y, Z = mandelbrot_set_3d(width, height, max_iter, x_min, x_max, y_min, y_max)
-fig = plot_mandelbrot_3d(X, Y, Z, cmap=cmap)
-st.pyplot(fig)
-
-# Footer
-st.markdown("---")
-st.markdown(
-    """
-    Created with ❤️ using [Streamlit](https://streamlit.io), [Matplotlib](https://matplotlib.org), 
-    and [mpl_toolkits.mplot3d](https://matplotlib.org/stable/tutorials/toolkits/mplot3d.html).  
-    Learn more about the Mandelbrot set on [Wikipedia](https://en.wikipedia.org/wiki/Mandelbrot_set).
-    """
-)
+# Display the figure
+st.plotly_chart(fig, use_container_width=True)
